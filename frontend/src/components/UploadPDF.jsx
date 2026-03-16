@@ -11,9 +11,7 @@ function UploadPDF() {
     formData.append("file", file);
 
     try {
-      await axios.post(`${API_URL}/upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      await axios.post(`${API_URL}/upload`, formData);
       alert("PDF Analyzed Successfully");
     } catch (error) {
       alert("Analysis Failed");
