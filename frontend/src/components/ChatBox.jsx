@@ -45,7 +45,7 @@ function ChatBox() {
           placeholder="Query the document..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="w-full bg-[#160a24]/80 border border-violet-500/20 rounded-2xl pl-6 pr-32 py-5 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all text-slate-200 placeholder:text-violet-900/60 resize-none overflow-hidden min-h-[64px] max-h-[300px]"
+          className="w-full bg-[#160a24]/80 border border-violet-500/20 rounded-2xl pl-6 pr-32 py-5 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all text-slate-200 placeholder:text-violet-900/60 resize-none overflow-hidden min-h-16 max-h-75"
         />
         
         <button

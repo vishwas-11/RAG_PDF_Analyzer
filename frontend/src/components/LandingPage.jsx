@@ -27,7 +27,7 @@ const LandingPage = () => {
           <div className="inline-block px-4 py-1.5 mb-6 text-sm font-semibold tracking-wider text-indigo-400 uppercase bg-indigo-500/10 border border-indigo-500/20 rounded-full backdrop-blur-md">
             Next-Gen Document Analysis
           </div>
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter bg-gradient-to-b from-white to-slate-500 bg-clip-text text-transparent mb-8">
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter bg-linear-to-b from-white to-slate-500 bg-clip-text text-transparent mb-8">
             PDF Insight
           </h1>
           <p className="text-slate-400 text-lg md:text-xl leading-relaxed max-w-xl mx-auto">
