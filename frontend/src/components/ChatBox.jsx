@@ -23,7 +23,8 @@ function ChatBox() {
     setLoading(true);
     setRawAnswer(""); // Clear previous answer
     try {
-      const response = await axios.post("http://localhost:8000/ask", null, { params: { question } });
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const response = await axios.post(`${API_URL}/ask`, null, { params: { question } });
       setRawAnswer(response.data.answer);
     } catch (error) {
       setRawAnswer("Core connection error. Please try again.");
