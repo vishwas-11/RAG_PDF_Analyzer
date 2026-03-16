@@ -1,62 +1,82 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import { useTypewriter } from "../hooks/useTypewriter"; // Adjust path as needed
 
 function ChatBox() {
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
+  const [rawAnswer, setRawAnswer] = useState(""); // Holds the full response
   const [loading, setLoading] = useState(false);
+  const textAreaRef = useRef(null);
+
+  // Integrate the typewriter effect
+  const animatedAnswer = useTypewriter(rawAnswer, 40); // 40ms per word
+
+  useEffect(() => {
+    if (textAreaRef.current) {
+      textAreaRef.current.style.height = "auto";
+      textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
+    }
+  }, [question]);
 
   const askQuestion = async () => {
     if (!question) return;
     setLoading(true);
+    setRawAnswer(""); // Clear previous answer
     try {
-      const response = await axios.post("http://localhost:8000/ask", null, {
-        params: { question }
-      });
-      setAnswer(response.data.answer);
+      const response = await axios.post("http://localhost:8000/ask", null, { params: { question } });
+      setRawAnswer(response.data.answer);
     } catch (error) {
-      setAnswer("Error fetching answer");
+      setRawAnswer("Core connection error. Please try again.");
     }
     setLoading(false);
   };
 
   return (
-    <div className="bg-slate-900/50 border border-slate-800 backdrop-blur-xl rounded-2xl p-8 shadow-2xl">
-      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-        <span className="text-cyan-400">02.</span> Ask Intelligence
+    <div className="bg-[#0f051a]/60 border border-violet-500/10 backdrop-blur-2xl rounded-3xl p-8 shadow-[0_0_40px_rgba(0,0,0,0.7)]">
+      <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+        Query Engine
+        <span className="flex h-2 w-2 rounded-full bg-violet-500 animate-pulse shadow-[0_0_8px_#a855f7]" />
       </h2>
 
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Ask a question..."
+      <div className="relative flex flex-col">
+        <textarea
+          ref={textAreaRef}
+          rows="1"
+          placeholder="Query the document..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-200"
+          className="w-full bg-[#160a24]/80 border border-violet-500/20 rounded-2xl pl-6 pr-32 py-5 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all text-slate-200 placeholder:text-violet-900/60 resize-none overflow-hidden min-h-[64px] max-h-[300px]"
         />
+        
         <button
           onClick={askQuestion}
           disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-lg transition-all disabled:opacity-50 active:scale-95"
+          className="absolute right-3 top-3 bottom-3 bg-violet-600 hover:bg-violet-500 text-white px-6 rounded-xl font-bold transition-all active:scale-95 disabled:opacity-40 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
         >
-          {loading ? "..." : "Ask"}
+          {loading ? (
+            <div className="flex gap-1">
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
+            </div>
+          ) : "SEND"}
         </button>
       </div>
 
-      {(loading || answer) && (
-        <div className="mt-6 animate-in fade-in slide-in-from-top-2 duration-500">
-          <div className="bg-slate-950/80 border border-indigo-500/20 rounded-xl p-5">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-2">AI Response</h3>
-            {loading ? (
-              <div className="flex gap-2 items-center text-slate-400">
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce [animation-delay:-.3s]" />
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce [animation-delay:-.5s]" />
-              </div>
-            ) : (
-              <p className="text-slate-300 leading-relaxed">{answer}</p>
-            )}
+      {(animatedAnswer || loading) && (
+        <div className="mt-8 p-6 bg-violet-950/20 border-t border-violet-500/30 rounded-2xl animate-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-1.5 h-6 bg-violet-500 rounded-full" />
+            <h3 className="text-xs font-black text-violet-400 uppercase tracking-widest">Inference Result</h3>
           </div>
+          
+          <p className="text-slate-300 leading-relaxed text-lg whitespace-pre-wrap">
+            {animatedAnswer}
+            {/* Blinking cursor while typing */}
+            {animatedAnswer !== rawAnswer && (
+              <span className="inline-block w-2 h-5 ml-1 bg-violet-500 animate-pulse align-middle" />
+            )}
+          </p>
         </div>
       )}
     </div>

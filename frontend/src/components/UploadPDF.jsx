@@ -4,7 +4,6 @@ function UploadPDF() {
   const handleUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
     const formData = new FormData();
     formData.append("file", file);
 
@@ -12,25 +11,30 @@ function UploadPDF() {
       await axios.post("http://localhost:8000/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      alert("PDF uploaded successfully");
+      alert("PDF Analyzed Successfully");
     } catch (error) {
-      console.error(error);
-      alert("Error uploading PDF");
+      alert("Analysis Failed");
     }
   };
 
   return (
-    <div className="group relative bg-slate-900/50 border border-slate-800 backdrop-blur-xl rounded-2xl p-8 transition-all hover:border-indigo-500/50 shadow-2xl">
-      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-        <span className="text-indigo-400">01.</span> Upload Document
-      </h2>
-      
-      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-700 rounded-xl cursor-pointer hover:bg-slate-800/50 transition-colors">
-        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-          <svg className="w-8 h-8 mb-3 text-slate-400 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+    <div className="group relative bg-[#0f051a]/60 border border-violet-500/10 backdrop-blur-2xl rounded-3xl p-8 transition-all hover:border-violet-500/40 shadow-[0_0_40px_rgba(0,0,0,0.7)]">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-white tracking-tight">Upload Core</h2>
+          <p className="text-violet-400/60 text-sm">Feed the engine your documents</p>
+        </div>
+        <div className="p-3 bg-violet-600/20 rounded-2xl border border-violet-500/20">
+          <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
-          <p className="text-sm text-slate-400">Click to upload or drag and drop</p>
+        </div>
+      </div>
+      
+      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-violet-900/50 rounded-2xl cursor-pointer hover:bg-violet-600/5 hover:border-violet-500/50 transition-all group/label">
+        <div className="text-center">
+          <p className="text-slate-300 font-medium group-hover/label:text-violet-300 transition-colors">Select PDF Document</p>
+          <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest">CLICK HERE TO UPLOAD</p>
         </div>
         <input type="file" accept="application/pdf" onChange={handleUpload} className="hidden" />
       </label>
