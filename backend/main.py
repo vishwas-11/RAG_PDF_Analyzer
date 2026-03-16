@@ -1,6 +1,53 @@
-from fastapi import FastAPI, UploadFile, File
+# from fastapi import FastAPI, UploadFile, File
+# from fastapi.middleware.cors import CORSMiddleware
+# import shutil
+# from rag_pipeline import create_vector_store, create_qa_chain
+
+# app = FastAPI()
+
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# vector_store = None
+# qa_chain = None
+
+
+# @app.post("/upload")
+# async def upload_pdf(file: UploadFile = File(...)):
+#     global vector_store, qa_chain
+
+#     file_path = f"temp_{file.filename}"
+
+#     with open(file_path, "wb") as buffer:
+#         shutil.copyfileobj(file.file, buffer)
+
+#     vector_store = create_vector_store(file_path)
+#     qa_chain = create_qa_chain(vector_store)
+
+#     return {"message": "PDF processed successfully"}
+
+
+# @app.post("/ask")
+# async def ask_question(question: str):
+#     global qa_chain
+
+#     response = qa_chain.run(question)
+
+#     return {"answer": response}
+
+
+
+
+
+
+
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import shutil
 from rag_pipeline import create_vector_store, create_qa_chain
 
 app = FastAPI()
@@ -21,21 +68,27 @@ qa_chain = None
 async def upload_pdf(file: UploadFile = File(...)):
     global vector_store, qa_chain
 
-    file_path = f"temp_{file.filename}"
+    if not file.filename.endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Read the file entirely into memory — no disk writes
+    pdf_bytes = await file.read()
 
-    vector_store = create_vector_store(file_path)
+    vector_store = create_vector_store(pdf_bytes, source_name=file.filename)
     qa_chain = create_qa_chain(vector_store)
 
-    return {"message": "PDF processed successfully"}
+    return {"message": f"'{file.filename}' processed and stored in MongoDB Atlas."}
 
 
 @app.post("/ask")
 async def ask_question(question: str):
     global qa_chain
 
-    response = qa_chain.run(question)
+    if qa_chain is None:
+        raise HTTPException(
+            status_code=400,
+            detail="No PDF has been uploaded yet. Please upload a PDF first.",
+        )
 
+    response = qa_chain.run(question)
     return {"answer": response}
