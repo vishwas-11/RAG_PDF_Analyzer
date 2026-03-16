@@ -2,6 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useTypewriter } from "../hooks/useTypewriter"; // Adjust path as needed
 
+
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+
 function ChatBox() {
   const [question, setQuestion] = useState("");
   const [rawAnswer, setRawAnswer] = useState(""); // Holds the full response
@@ -23,7 +28,7 @@ function ChatBox() {
     setLoading(true);
     setRawAnswer(""); // Clear previous answer
     try {
-      const API_URL = import.meta.env.VITE_API_URL;
+      
       const response = await axios.post(`${API_URL}/ask`, null, { params: { question } });
       setRawAnswer(response.data.answer);
     } catch (error) {

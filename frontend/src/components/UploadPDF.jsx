@@ -1,5 +1,8 @@
 import axios from "axios";
 
+
+const API_URL = import.meta.env.VITE_API_URL;
+
 function UploadPDF() {
   const handleUpload = async (event) => {
     const file = event.target.files[0];
@@ -8,7 +11,7 @@ function UploadPDF() {
     formData.append("file", file);
 
     try {
-      await axios.post("http://localhost:8000/upload", formData, {
+      await axios.post(`${API_URL}/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       alert("PDF Analyzed Successfully");
