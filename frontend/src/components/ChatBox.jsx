@@ -23,7 +23,7 @@ function ChatBox() {
     setLoading(true);
     setRawAnswer(""); // Clear previous answer
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const API_URL = import.meta.env.VITE_API_URL;
       const response = await axios.post(`${API_URL}/ask`, null, { params: { question } });
       setRawAnswer(response.data.answer);
     } catch (error) {
