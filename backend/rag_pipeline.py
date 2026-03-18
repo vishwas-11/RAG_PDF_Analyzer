@@ -24,7 +24,7 @@ def get_embeddings():
     return GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
 
 
-def create_vector_store(pdf_bytes: bytes, source_name: str = "uploaded_pdf"):
+def create_vector_store(pdf_bytes: bytes, source_name: str = "uploaded_pdf", user_email : str = ""):
     """
     Parse PDF from raw bytes, chunk the text, embed it,
     and store the vectors in MongoDB Atlas. Returns a
@@ -44,6 +44,7 @@ def create_vector_store(pdf_bytes: bytes, source_name: str = "uploaded_pdf"):
     # Tag every chunk with the original filename so you can filter later
     for doc in documents:
         doc.metadata["source"] = source_name
+        doc.metadata["user_email"] = user_email
 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
@@ -64,15 +65,21 @@ def create_vector_store(pdf_bytes: bytes, source_name: str = "uploaded_pdf"):
     return vector_store
 
 
-def create_qa_chain(vector_store):
+def create_qa_chain(vector_store, source_name: str, user_email: str):
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
-        temperature=0.3,
+        temperature=0.4,
     )
 
     retriever = vector_store.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": 5},
+        search_kwargs={"k": 5,
+                       "pre-filter" : {
+                           "$and": [
+                               {"source" : {"$eq" : source_name}},
+                               {"user_email" : {"$eq" : user_email}}
+                           ]
+                       }},
     )
 
     qa_chain = RetrievalQA.from_chain_type(
