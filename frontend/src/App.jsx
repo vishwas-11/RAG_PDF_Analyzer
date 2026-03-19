@@ -1,19 +1,3 @@
-// import LandingPage from "./components/LandingPage";
-
-// function App() {
-//   return (
-//     <>
-//       <LandingPage />
-//     </>
-//   );
-// }
-
-// export default App;
-
-
-
-
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./components/LandingPage";
 import Dashboard from "./components/Dashboard";
