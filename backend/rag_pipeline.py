@@ -73,7 +73,7 @@ def create_qa_chain(vector_store, source_name: str, user_email: str):
 
     retriever = vector_store.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": 5,
+        search_kwargs={"k": 4,
                        "pre-filter" : {
                            "$and": [
                                {"source" : {"$eq" : source_name}},

@@ -130,39 +130,107 @@ async def get_history(email: str = Depends(get_current_user)):
     chats = list(chats_collection.find({"userEmail": email}, {"_id": 0}))
     return {"files": files, "chats": chats}
 
-@app.post("/ask")
-async def ask_question(question: str, fileName: str, email: str = Depends(get_current_user), history : str = ""):
+# @app.post("/ask")
+# async def ask_question(question: str, fileName: str, email: str = Depends(get_current_user), history : str = ""):
 
 
-    import json
+#     import json
     
-    # Build context from previous conversations
+#     # Build context from previous conversations
+#     history_context = ""
+#     if history:
+#         try:
+#             past = json.loads(history)
+#             past = past[-3:]
+
+#             history_context = "\n".join([
+#                 f"User: {h['question']}\nAssistant: {h['answer']}" 
+#                 for h in past
+#             ])
+#         except:
+#             history_context = ""
+
+#     # Augment the question with conversation history
+#     full_query = question
+#     if history_context:
+#         full_query = f"""Previous conversation:
+# {history_context}
+
+# Current question: {question}
+
+# Answer the current question, taking into account the conversation history above."""
+
+#     vector_store = MongoDBAtlasVectorSearch(collection=collection, embedding=get_embeddings(), index_name=VECTOR_INDEX_NAME)
+#     qa_chain = create_qa_chain(vector_store, fileName, email)
+#     response = qa_chain.invoke({"query": question})
+#     answer = response["result"]
+
+#     chats_collection.insert_one({
+#         "userEmail": email,
+#         "fileName": fileName,
+#         "question": question,
+#         "answer": answer,
+#         "timestamp": datetime.utcnow()
+#     })
+#     return {"answer": answer}
+
+
+
+@app.post("/ask")
+async def ask_question(
+    question: str,
+    fileName: str,
+    email: str = Depends(get_current_user),
+    history: str = ""
+):
+    import json
+
+    # ---- STEP 1: Build trimmed history context ----
     history_context = ""
+
     if history:
         try:
             past = json.loads(history)
+
+            #  LIMIT HISTORY (VERY IMPORTANT)
+            past = past[-3:]   # only last 3 chats
+
             history_context = "\n".join([
-                f"User: {h['question']}\nAssistant: {h['answer']}" 
+                f"User: {h['question']}\nAssistant: {h['answer']}"
                 for h in past
             ])
         except:
             history_context = ""
 
-    # Augment the question with conversation history
-    full_query = question
+    # ---- STEP 2: Create FINAL PROMPT ----
     if history_context:
-        full_query = f"""Previous conversation:
+        final_query = f"""
+You are a helpful assistant answering questions based on a PDF.
+
+Previous conversation:
 {history_context}
 
-Current question: {question}
+Now answer the following question using both context and retrieved knowledge:
 
-Answer the current question, taking into account the conversation history above."""
+Question: {question}
+"""
+    else:
+        final_query = question
 
-    vector_store = MongoDBAtlasVectorSearch(collection=collection, embedding=get_embeddings(), index_name=VECTOR_INDEX_NAME)
+    # ---- STEP 3: Vector search ONLY on current query ----
+    vector_store = MongoDBAtlasVectorSearch(
+        collection=collection,
+        embedding=get_embeddings(),
+        index_name=VECTOR_INDEX_NAME
+    )
+
     qa_chain = create_qa_chain(vector_store, fileName, email)
-    response = qa_chain.invoke({"query": question})
+
+    #  IMPORTANT: send final_query (not question)
+    response = qa_chain.invoke({"query": final_query})
     answer = response["result"]
 
+    # ---- STEP 4: Store chat ----
     chats_collection.insert_one({
         "userEmail": email,
         "fileName": fileName,
@@ -170,4 +238,5 @@ Answer the current question, taking into account the conversation history above.
         "answer": answer,
         "timestamp": datetime.utcnow()
     })
+
     return {"answer": answer}
