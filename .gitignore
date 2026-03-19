@@ -16,5 +16,3 @@ wheels/
 
 
 backend/.python-version
-backend/pyproject.toml
-backend/uv.lock

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useTypewriter } from "../hooks/useTypewriter";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 function ChatBox({ activeFile, previousChats, onNewMessage }) {
   const [question, setQuestion] = useState("");
