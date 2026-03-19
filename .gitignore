@@ -13,3 +13,8 @@ wheels/
 .env
 .env.production
 .env.development
+
+.python-version
+pyproject.toml
+
+uv.lock
