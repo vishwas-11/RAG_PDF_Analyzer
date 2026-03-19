@@ -67,7 +67,7 @@ def create_vector_store(pdf_bytes: bytes, source_name: str = "uploaded_pdf", use
 
 def create_qa_chain(vector_store, source_name: str, user_email: str):
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         temperature=0.4,
     )
 
