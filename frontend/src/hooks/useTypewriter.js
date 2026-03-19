@@ -1,25 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-export const useTypewriter = (text, speed = 30) => {
+export const useTypewriter = (text, speed = 50) => {
   const [displayedText, setDisplayedText] = useState("");
 
   useEffect(() => {
     if (!text) return;
 
-    setDisplayedText(""); // Reset text when a new answer arrives
-    const words = text.split(" ");
+    setDisplayedText("");
     let i = 0;
 
-    const timer = setInterval(() => {
-      if (i < words.length) {
-        setDisplayedText((prev) => prev + (i === 0 ? "" : " ") + words[i]);
-        i++;
-      } else {
-        clearInterval(timer);
+    const interval = setInterval(() => {
+      setDisplayedText((prev) => prev + text.charAt(i));
+      i++;
+
+      if (i >= text.length) {
+        clearInterval(interval);
       }
     }, speed);
 
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, [text, speed]);
 
   return displayedText;

@@ -1,90 +1,95 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { useTypewriter } from "../hooks/useTypewriter"; // Adjust path as needed
-
-
+import { useTypewriter } from "../hooks/useTypewriter";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-
-function ChatBox() {
+function ChatBox({ activeFile, previousChats, onNewMessage }) {
   const [question, setQuestion] = useState("");
-  const [rawAnswer, setRawAnswer] = useState(""); // Holds the full response
+  const [rawAnswer, setRawAnswer] = useState("");
   const [loading, setLoading] = useState(false);
   const textAreaRef = useRef(null);
+  const scrollEndRef = useRef(null);
+  const animatedAnswer = useTypewriter(rawAnswer, 15);
+  const token = localStorage.getItem("token");
 
-  // Integrate the typewriter effect
-  const animatedAnswer = useTypewriter(rawAnswer, 40); // 40ms per word
+  const formatText = (text) => {
+    if (!text) return "";
+    return text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br/>");
+  };
 
-  useEffect(() => {
-    if (textAreaRef.current) {
-      textAreaRef.current.style.height = "auto";
-      textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
-    }
-  }, [question]);
+  useEffect(() => { scrollEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [animatedAnswer, previousChats]);
 
   const askQuestion = async () => {
-    if (!question) return;
+    if (!question || loading || !activeFile) return;
     setLoading(true);
-    setRawAnswer(""); // Clear previous answer
+    setRawAnswer("");
     try {
-      
-      const response = await axios.post(`${API_URL}/ask`, null, { params: { question } });
-      setRawAnswer(response.data.answer);
-    } catch (error) {
-      setRawAnswer("Core connection error. Please try again.");
+      const res = await axios.post(`${API_URL}/ask`, null, {
+        params: {
+          question,
+          fileName: activeFile,
+          history: JSON.stringify(previousChats.slice(-3).map(c => ({ question: c.question, answer: c.answer })))
+        },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setRawAnswer(res.data.answer);
+      setQuestion("");
+      onNewMessage();
+    } catch (e) {
+      setRawAnswer("⚠️ Neural core timeout.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="bg-[#0f051a]/60 border border-violet-500/10 backdrop-blur-2xl rounded-3xl p-8 shadow-[0_0_40px_rgba(0,0,0,0.7)]">
-      <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-        Query Engine
-        <span className="flex h-2 w-2 rounded-full bg-violet-500 animate-pulse shadow-[0_0_8px_#a855f7]" />
-      </h2>
-
-      <div className="relative flex flex-col">
-        <textarea
-          ref={textAreaRef}
-          rows="1"
-          placeholder="Query the document..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          className="w-full bg-[#160a24]/80 border border-violet-500/20 rounded-2xl pl-6 pr-32 py-5 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all text-slate-200 placeholder:text-violet-900/60 resize-none overflow-hidden min-h-16 max-h-75"
-        />
-        
-        <button
-          onClick={askQuestion}
-          disabled={loading}
-          className="absolute right-3 top-3 bottom-3 bg-violet-600 hover:bg-violet-500 text-white px-6 rounded-xl font-bold transition-all active:scale-95 disabled:opacity-40 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
-        >
-          {loading ? (
-            <div className="flex gap-1">
-              <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-              <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-              <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
+    <div className="flex flex-col h-full">
+      <div className="space-y-8 pb-40">
+        {previousChats.map((chat, idx) => (
+          <div key={idx} className="space-y-4">
+            <div className="flex items-center gap-4 px-2">
+              <div className="h-px flex-1 bg-white/5" />
+              <span className="text-[10px] font-black text-violet-500 uppercase tracking-widest">Query</span>
+              <div className="h-px flex-1 bg-white/5" />
             </div>
-          ) : "SEND"}
-        </button>
+            <p className="text-lg font-bold text-white px-4 leading-tight">{chat.question}</p>
+            <div className="bg-white/5 border border-white/5 backdrop-blur-xl p-8 rounded-[2rem] text-slate-300 leading-relaxed shadow-2xl"
+                 dangerouslySetInnerHTML={{ __html: formatText(chat.answer) }} />
+          </div>
+        ))}
+
+        {rawAnswer && (
+          <div className="animate-pulse space-y-4">
+            <p className="text-xs font-black text-fuchsia-500 uppercase tracking-widest px-4">Inference...</p>
+            <div className="bg-violet-600/10 border border-violet-500/20 backdrop-blur-xl p-8 rounded-[2rem] text-white leading-relaxed shadow-[0_0_40px_rgba(139,92,246,0.1)]"
+                 dangerouslySetInnerHTML={{ __html: formatText(animatedAnswer) }} />
+          </div>
+        )}
+        <div ref={scrollEndRef} />
       </div>
 
-      {(animatedAnswer || loading) && (
-        <div className="mt-8 p-6 bg-violet-950/20 border-t border-violet-500/30 rounded-2xl animate-in slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-1.5 h-6 bg-violet-500 rounded-full" />
-            <h3 className="text-xs font-black text-violet-400 uppercase tracking-widest">Inference Result</h3>
-          </div>
-          
-          <p className="text-slate-300 leading-relaxed text-lg whitespace-pre-wrap">
-            {animatedAnswer}
-            {/* Blinking cursor while typing */}
-            {animatedAnswer !== rawAnswer && (
-              <span className="inline-block w-2 h-5 ml-1 bg-violet-500 animate-pulse align-middle" />
-            )}
-          </p>
+      {/* Console Style Input */}
+      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6">
+        <div className="relative bg-[#160a24]/80 border border-white/10 backdrop-blur-3xl rounded-full p-2 shadow-2xl flex items-center">
+          <textarea
+            ref={textAreaRef}
+            rows="1"
+            placeholder="Search neural index..."
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), askQuestion())}
+            className="flex-1 bg-transparent border-none pl-6 py-3 focus:outline-none text-sm text-white placeholder:text-slate-600 resize-none overflow-hidden"
+          />
+          <button
+            onClick={askQuestion}
+            disabled={loading}
+            className="bg-white text-black h-10 px-6 rounded-full font-black text-[10px] uppercase tracking-tighter hover:bg-violet-400 hover:text-white transition-all disabled:opacity-20"
+          >
+            {loading ? "..." : "Execute"}
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
